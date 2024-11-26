@@ -1,0 +1,90 @@
+@import url("https://fonts.googleapis.com/css2?family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --main-primary: #0e0e0e;
+  --main-secondary: #1b1b1b;
+  --main-third: #171717;
+
+  --text-primary: #ffffff;
+  --text-secondary: #8b8b8b;
+  --text-third: #232323;
+
+  --hover: #ffffff05;
+  --emphasis: #ffffff;
+
+  --red-dark: #7f1d1d;
+  --red: #f87171;
+  --red10: #f8717110;
+  --red20: #f8717120;
+  --red40: #f8717140;
+  --red60: #f8717160;
+  --red80: #f8717180;
+
+  --green-dark: #064e3b;
+  --green: #34d399;
+  --green10: #34d39910;
+  --green20: #34d39920;
+  --green40: #34d39940;
+  --green60: #34d39960;
+  --green80: #34d39980;
+}
+
+.light-theme {
+  :root {
+    --main-primary: #d9d9d9;
+    --main-secondary: #f2f2f2;
+    --main-third: #e5e5e5;
+
+    --text-primary: #0e0e0e;
+    --text-secondary: #383838;
+    --text-third: #7c7c7c;
+
+    --hover: #00000007;
+    --emphasis: #0e0e0e;
+
+    --red-dark: #7f1d1d;
+    --red: #ef4444;
+    --red20: #f8717120;
+    --red40: #f8717140;
+    --red60: #f8717160;
+    --red80: #f8717180;
+
+    --green-dark: #064e3b;
+    --green: #10b981;
+    --green20: #34d39920;
+    --green40: #34d39940;
+    --green60: #34d39960;
+    --green80: #34d39980;
+  }
+}
+
+* {
+  color: var(--text-secondary);
+  font-family: "Urbanist", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
+.itemChoice:checked {
+  border: 1px solid var(--text-primary);
+  background-image: url(./assets/icons/inputChecked-icon.svg);
+  background-repeat: no-repeat;
+  background-position: center;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.animatedbg {
+  background-image: url(./assets/images/Animation.gif);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100%;
+}
+
+.chart-gradient-color {
+  stop-color: var(--green);
+}
+
