@@ -1,4 +1,3 @@
-import { signal } from "@preact/signals-react";
 import { useSignal, useSignals } from "@preact/signals-react/runtime";
 import { createPortal } from "react-dom";
 
