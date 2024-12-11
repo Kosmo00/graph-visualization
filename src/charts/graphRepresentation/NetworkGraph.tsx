@@ -1,8 +1,8 @@
 import { useMemo, useState, useEffect } from "react";
-import { Node, Link } from "../models/NetworkTrafficGraph";
+import { Node, Link } from "../../models/NetworkTrafficGraph";
 import * as d3 from "d3";
-import useActiveNodesState from "../store/activeNodesStore";
-import useActiveLinksStore from "../store/activeLinksStore";
+import useActiveNodesState from "../../store/activeNodesStore";
+import useActiveLinksStore from "../../store/activeLinksStore";
 
 export interface CurrentLink extends d3.SimulationLinkDatum<Node> {
   source: Node;

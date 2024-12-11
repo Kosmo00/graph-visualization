@@ -88,3 +88,12 @@
   stop-color: var(--green);
 }
 
+#popups {
+  max-width: 1280px;
+  margin: 0 auto;
+  text-align: center;
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+}

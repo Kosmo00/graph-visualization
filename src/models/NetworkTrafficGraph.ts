@@ -30,7 +30,7 @@ export class NetworkTrafficGraph {
     links: Record<FlowId, Link>;
     width: number;
     height: number;
-    constructor(flows: Flow[], width: number, height: number){
+    constructor(flows: Flow[], width: number = 0, height: number = 0){
         this.nodes = {};
         this.links = {};
         this.height = height;

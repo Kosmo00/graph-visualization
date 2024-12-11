@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { CurrentLink } from "../components/NetworkGraph";
+import { CurrentLink } from "../charts/graphRepresentation/NetworkGraph";
 
 interface ActiveLinksState {
     activeLinks: CurrentLink[];

@@ -1,4 +1,6 @@
-import { useCallback, useState } from "react"
+import { signal } from "@preact/signals-react";
+import { useSignal, useSignals } from "@preact/signals-react/runtime";
+import { createPortal } from "react-dom";
 
 interface Coordinates {
 	x: number;
@@ -11,38 +13,47 @@ interface PropTypes {
 	header?: string;
 }
 
+// const signalPosition = signal<Coordinates>({x: 0, y: 0});
+// const signalReferencePosition = signal<Coordinates>({x: 0, y: 0});
+// const isPressed = signal<boolean>(false);
+
 function Modal({children, onClose, header} : PropTypes) {
-	const [position, setPosition] = useState<Coordinates>({x: 0, y: 0});
-	const [referencePosition, setReferencePosition] = useState<Coordinates>({x: 0, y: 0});
-	const [isPressed, setIsPressed] = useState<boolean>(false);
 
-	const handleMouseMove = useCallback((ev: React.MouseEvent<HTMLDivElement>) => {
-		if(isPressed){
-			setPosition((position) => ({
-				x: position.x + ev.clientX - referencePosition.x,
-				y: position.y + ev.clientY - referencePosition.y
-			}));
-			setReferencePosition(position => ({
-				x: position.x + ev.clientX - position.x,
-				y: position.y + ev.clientY - position.y
-			}))
+	return createPortal(<ModalBody onClose={onClose} header={header}>{children}</ModalBody>, document.getElementById('popups')!);
+}
+
+function ModalBody({ children, onClose, header }: PropTypes){
+	useSignals();
+	const signalPosition = useSignal<Coordinates>({x: 0, y: 0});
+	const signalReferencePosition = useSignal<Coordinates>({x: 0, y: 0});
+	const isPressed = useSignal<boolean>(false);
+
+	const handleMouseMove = (ev: React.MouseEvent<HTMLDivElement>) => {
+		if(isPressed.value){
+			signalPosition.value.x = signalPosition.value.x + ev.clientX - signalReferencePosition.value.x;
+			signalPosition.value.y = signalPosition.value.y + ev.clientY - signalReferencePosition.value.y;
+			signalPosition.value = {...signalPosition.value};
+			signalReferencePosition.value.x = ev.clientX;
+			signalReferencePosition.value.y = ev.clientY;
+			signalReferencePosition.value = {...signalReferencePosition.value};
 		}
-	}, [referencePosition, isPressed])
+	}
 
-	const handleMouseDown = useCallback((ev: React.MouseEvent<HTMLDivElement>) => {
-		setReferencePosition({
-			x: ev.clientX,
-			y: ev.clientY
-		});
-		setIsPressed(true);
-	}, [])
+	const handleMouseDown = (ev: React.MouseEvent<HTMLDivElement>) => {
+		signalReferencePosition.value.x = ev.clientX;
+		signalReferencePosition.value.y = ev.clientY;
+		signalReferencePosition.value = {...signalReferencePosition.value};
+		isPressed.value = true;
+	}
+
+
 
 	return (
 		<div 
 			className="absolute bg-black py-5 px-8 z-10 w-[300px] rounded-xl cursor-grab hover:z-20" 
-			style={{marginLeft: `${position.x}px`, marginTop: `${position.y}px`}}
+			style={{transform: `translate(${signalPosition.value.x}px,${signalPosition.value.y}px)`}}
 			onMouseDown={handleMouseDown}
-			onMouseUp={() => setIsPressed(false)}
+			onMouseUp={() => isPressed.value = false}
 			onMouseMove={handleMouseMove}
 		>
 			<div className="flex justify-between mb-3">
