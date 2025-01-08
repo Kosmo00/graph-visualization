@@ -128,8 +128,13 @@ export class FlowsResume {
 
     constructor(flows: Flow[]){
         this.flowsPerTimestampGroup = new Map<number, number> ();
-        const maxInitialTimestamp = Math.max(...flows.map(flow => flow.initialTimestampMilliseconds));
-        const minInitialTimestamp = Math.min(...flows.map(flow => flow.initialTimestampMilliseconds));
+        const initialTsArray = flows.map(flow => flow.initialTimestampMilliseconds);
+        let maxInitialTimestamp = initialTsArray[0];
+        let minInitialTimestamp = initialTsArray[0];
+        initialTsArray.forEach(ts => {
+            maxInitialTimestamp = Math.max(maxInitialTimestamp, ts);
+            minInitialTimestamp = Math.min(minInitialTimestamp, ts);
+        })
         const duration = maxInitialTimestamp - minInitialTimestamp;
         const chunksNumber = 1000;
         const chunkLen = Math.ceil(duration / chunksNumber);

@@ -1,17 +1,8 @@
+import { integerToIp } from "../services/Ip";
 import useActiveLinksStore from "../store/activeLinksStore";
 import useActiveNodesState from "../store/activeNodesStore";
 import Modal from "./Modal";
 
-
-function integerToIp(ipInteger: number): string {
-  const bytes: number[] = new Array(4);
-  bytes[0] = ipInteger & 0xFF;
-  bytes[1] = (ipInteger >> 8) & 0xFF;
-  bytes[2] = (ipInteger >> 16) & 0xFF;
-  bytes[3] = (ipInteger >> 24) & 0xFF;
-
-  return bytes.join('.');
-}
 
 function ActiveModals() {
   const { activeLinks, removeActiveLink } = useActiveLinksStore(state => state);
@@ -28,15 +19,15 @@ function ActiveModals() {
             id: {node.id}
           </div>
           <div>
-            ip endpoint: {`${integerToIp(parseInt(node.id.split(':')[0]))}:${node.id.split(':')[1]}`}
+            ip endpoint: {`${integerToIp(parseInt(node.id.split(':')[0]))}${node.id.split(':')[1] ? ':' + node.id.split(':')[1] : ''}`}
           </div>
           <div>
             {
-              node.attackedBy.length !== 0 &&
+              node.attackedBy.size !== 0 &&
               ('attackedBy: ')
             }
-            {node.attackedBy.map(nodeId => (
-              <div>{`${integerToIp(parseInt(nodeId.split(':')[0]))}:${nodeId.split(':')[1]},`}</div>
+            {Array.from(node.attackedBy).map(nodeId => (
+              <div>{`${integerToIp(parseInt(nodeId.split(':')[0]))}${nodeId.split(':')[1] ? ':' + nodeId.split(':')[1] : ''},`}</div>
             ))}
           </div>
           <div>
@@ -59,10 +50,10 @@ function ActiveModals() {
                 <div>attack type: {link.attackType}</div>
               }
               <div>
-                from: {`${integerToIp(parseInt(link.source.id.split(':')[0]))}:${link.source.id.split(':')[1]}`}
+                from: {`${integerToIp(parseInt(link.source.id.split(':')[0]))}${link.source.id.split(':')[1] ? ':' + link.source.id.split(':')[1]: ''}`}
               </div>
               <div>
-                to: {`${integerToIp(parseInt(link.target.id.split(':')[0]))}:${link.target.id.split(':')[1]}`}
+                to: {`${integerToIp(parseInt(link.target.id.split(':')[0]))}${link.target.id.split(':')[1] ? ':' + link.target.id.split(':')[1]: ''}`}
               </div>
               <div>
                 bytes sended: {link.outBytes} bytes

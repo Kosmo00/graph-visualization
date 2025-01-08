@@ -7,14 +7,15 @@ import { NetworkTrafficGraph } from '../../models/NetworkTrafficGraph';
 
 interface PropTypes {
   flows: Flow[];
+  isIpAndPortNodes: boolean;
 }
 
 const width = 1200;
 const height = 500;
 
-function ConnectedComponents({flows} : PropTypes) {
+function ConnectedComponents({flows, isIpAndPortNodes} : PropTypes) {
   
-  const networkTraffic = new NetworkTrafficGraph(flows);
+  const networkTraffic = new NetworkTrafficGraph(flows, 0, 0, isIpAndPortNodes);
   const connectedComponents = new ConnectedComponentsResume(networkTraffic);
 
   return (

@@ -50,6 +50,8 @@ function App() {
   const windowSize = timeInterval / (maxTimestamp - minTimestamp) * 100;
   const windowPadding = (actualTimestamp - minTimestamp) / (maxTimestamp - minTimestamp) * 100;
 
+  const [isIpAndPortNodes, setIsIpAndPortNodes] = useState(false);
+
   const applyFilters = useCallback(() => {
     const initialInterval = actualTimestamp;
     const finalInterval = actualTimestamp + timeInterval;
@@ -149,15 +151,15 @@ function App() {
   const displayedChart = [
     {
       id: ChartID.GRAPH_REPRESENTATION,
-      value: <GraphSection flows={filteredFlows} />
+      value: <GraphSection flows={filteredFlows} isIpAndPortNodes={isIpAndPortNodes} />
     },
     {
       id: ChartID.CONNECTED_COMPONENTS,
-      value: <ConnectedComponents flows={filteredFlows} />
+      value: <ConnectedComponents flows={filteredFlows} isIpAndPortNodes={isIpAndPortNodes} />
     },
     {
       id: ChartID.ECCENTRICITY,
-      value: <Eccentricity flows={filteredFlows} />
+      value: <Eccentricity flows={filteredFlows} isIpAndPortNodes={isIpAndPortNodes} />
     },
   ].filter((chart) => chart.id === selectedChart)[0].value;
 
@@ -280,6 +282,10 @@ function App() {
                 <label className="mr-2">Window size (ms)</label>
                 <input className="rounded-lg pl-1" type="text" value={timeInterval} onChange={onWindowSizeChange} />
               </div>
+              <div className="ml-5">
+                <input type="checkbox" id="check-id-port" onChange={() => setIsIpAndPortNodes(v => !v)} />
+                <label htmlFor="check-id-port" className="ml-1">IP + port nodes</label>
+              </div>
             </div>
             <div ref={intervalRef} className="relative h-[80px] w-full my-5">
               <div className="absolute w-full h-full">
@@ -299,10 +305,10 @@ function App() {
                   onMouseDown={onLeftResizeMouseDown}
                   onMouseUp={onLeftResizeMouseUp}
                   onMouseMove={onLeftResizeMouseMove}
-                  className="h-full w-[6px] hover:cursor-ew-resize bg-slate-500"
+                  className="h-full w-[15px] hover:cursor-ew-resize bg-slate-500"
                 ></div>
                 <div 
-                  className="h-full w-[6px] hover:cursor-ew-resize bg-slate-500"
+                  className="h-full w-[15px] hover:cursor-ew-resize bg-slate-500"
                   onMouseDown={onRightResizeMouseDown}
                   onMouseUp={onRightResizeMouseUp}
                   onMouseMove={onRightResizeMouseMove}

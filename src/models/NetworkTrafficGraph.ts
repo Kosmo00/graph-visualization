@@ -7,7 +7,7 @@ export interface Node extends d3.SimulationNodeDatum {
     id: NodeId;
     value: number;
     name?: string;
-    attackedBy: NodeId[];
+    attackedBy: Set<NodeId>;
     inPacketsCount: number;
     outPacketsCount: number;
     receivedTrafficVolume: number;
@@ -30,11 +30,13 @@ export class NetworkTrafficGraph {
     links: Record<FlowId, Link>;
     width: number;
     height: number;
-    constructor(flows: Flow[], width: number = 0, height: number = 0){
+    isIpAndPortNodes: boolean;
+    constructor(flows: Flow[], width: number = 0, height: number = 0, isIpAndPortNodes: boolean = true){
         this.nodes = {};
         this.links = {};
         this.height = height;
         this.width = width;
+        this.isIpAndPortNodes = isIpAndPortNodes;
         flows.forEach(flow => {
             this.updateLinks(flow);
             this.updateNode(flow);
@@ -66,7 +68,7 @@ export class NetworkTrafficGraph {
         return {
             id: nodeId,
             value: 0.4,
-            attackedBy: [],
+            attackedBy: new Set(),
             inPacketsCount: 0,
             outPacketsCount: 0,
             receivedTrafficVolume: 0,
@@ -90,11 +92,19 @@ export class NetworkTrafficGraph {
     }
 
     getSrcNodeId(flow: Flow) : NodeId {
-        return flow.sourceIpAddress + ":" + flow.sourcePort.toString();
+        let address = flow.sourceIpAddress.toString();
+        if(this.isIpAndPortNodes){
+            address += ":" + flow.sourcePort.toString();
+        }
+        return  address ;
     }
 
     getDstNodeId(flow: Flow) : NodeId {
-        return flow.destinationIpAddress + ":" + flow.destinationPort.toString();
+        let address = flow.destinationIpAddress.toString();
+        if(this.isIpAndPortNodes){
+            address += ":" + flow.destinationPort.toString();
+        }
+        return  address ;
     }
 
     updateSrcNode(flow: Flow){
@@ -119,7 +129,7 @@ export class NetworkTrafficGraph {
         this.nodes[nodeId].sendedTrafficVolume += flow.totalInBytes;
         if(flow.isAttack){
             const attackerId: NodeId = this.getSrcNodeId(flow);
-            this.nodes[nodeId].attackedBy.push(attackerId);
+            this.nodes[nodeId].attackedBy.add(attackerId);
         }
     }
 

@@ -124,9 +124,9 @@ function NetworkGraph({nodes, links, width, height}: PropTypes) {
             key={node.id}
             className="cursor-pointer"
             r={10 * node.value}
-            stroke={ node.attackedBy.length !== 0 ? "red" : "white" }
+            stroke={ node.attackedBy.size !== 0 ? "red" : "white" }
             strokeWidth={1}
-            fill={ node.attackedBy.length !== 0 ? "red" : "white" }
+            fill={ node.attackedBy.size !== 0 ? "red" : "white" }
             cx={node.x}
             cy={node.y}
             opacity={node.value}

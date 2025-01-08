@@ -7,14 +7,14 @@ import NetworkGraph from "./NetworkGraph";
 
 interface PropTypes {
   flows: Flow[];
+  isIpAndPortNodes: boolean;
 }
 
 const width = 1200;
 const height = 500;
 
-function GraphSection({flows} : PropTypes) {
-  const currentGraph = useMemo(() => new NetworkTrafficGraph(flows, width, height), [flows]);
-
+function GraphSection({flows, isIpAndPortNodes} : PropTypes) {
+  const currentGraph = useMemo(() => new NetworkTrafficGraph(flows, width, height, isIpAndPortNodes), [flows, isIpAndPortNodes]);
   return (
     <>
       <ActiveModals />
