@@ -3,7 +3,7 @@ import { Flow } from '../../models/Flow';
 import { useMemo } from 'react';
 import ActiveModals from "../../components/ActiveModals";
 import ChartSection from "../ChartSection";
-import NetworkGraph from "./NetworkGraph";
+import BetterNetworkGraph from "./BetterNetworkGraph";
 
 interface PropTypes {
   flows: Flow[];
@@ -19,7 +19,7 @@ function GraphSection({flows, isIpAndPortNodes} : PropTypes) {
     <>
       <ActiveModals />
       <ChartSection name="Graph representation">
-        <NetworkGraph nodes={currentGraph.getNodes()} links={currentGraph.getLinks()}  width={width} height={height} />   
+        <BetterNetworkGraph style={{width, height}} links={currentGraph.getLinks()} nodes={currentGraph.getNodes()} />
       </ChartSection>
     </>
   )

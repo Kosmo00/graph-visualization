@@ -11,11 +11,18 @@
   },
   "dependencies": {
     "@preact/signals-react": "^2.2.0",
+    "@react-sigma/core": "^4.0.3",
+    "@react-sigma/layout-circular": "^4.0.3",
+    "@react-sigma/layout-core": "^4.0.3",
+    "@react-sigma/layout-forceatlas2": "^4.0.3",
     "@types/d3": "^7.4.3",
     "d3": "^7.9.0",
     "elegant-queue": "^1.0.7",
+    "graphology": "^0.25.4",
+    "graphology-types": "^0.24.8",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "sigma": "^3.0.0",
     "uuid": "^11.0.3",
     "zustand": "^5.0.1"
   },
