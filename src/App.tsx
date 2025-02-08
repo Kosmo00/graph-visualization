@@ -1,13 +1,13 @@
-// @ts-nocheck
 import { useCallback, useEffect, useRef, useState } from "react";
 import GraphSection from "./charts/graphRepresentation/GraphSection";
 import { Flow } from "./models/Flow";
-import { v4 as uuidv4 } from "uuid";
 import SelectDropdownLabel, { Option } from "./components/SelectDropdownLabel";
 import ConnectedComponents from "./charts/connectedComponents/ConnectedComponents";
 import Eccentricity from "./charts/excentricity/Eccentricity";
 import { FlowsResume } from "./models/StatisticalResume";
 import RealtimeLineChart from "./charts/LineChart";
+import Draggable, { DraggableData, DraggableEvent } from "react-draggable";
+import useGetFlows from "./hooks/useGetFlows";
 
 enum ChartID {
   GRAPH_REPRESENTATION,
@@ -32,23 +32,21 @@ const chartOptions : Option[] = [
 
 function App() {
 
-  const [flows, setFlows] = useState<Flow[]>([]);
-  const [filteredFlows, setFilteredFlows] = useState<Flow[]>([]);
-
-  // Filters
-  const [minTimestamp, setMinTimestamp] = useState<number>(0);
-  const [maxTimestamp, setMaxTimestamp] = useState<number>(0);
-
   const [actualTimestamp, setActualTimestamp] = useState<number>(0);
   const [timeInterval, setTimeInterval] = useState(30_000);
   const [ipFilter, setIpFilter] = useState('');
   const [portFilter, setPortFilter] = useState('');
+	const [filteredFlows, setFilteredFlows] = useState<Flow[]>([]);
+
+  const [windowPosition, setWindowPosition] = useState(0);
+  const [deltaRightResize, setDeltaRightResize] = useState(0);
+
+  const { flows, minTimestamp, maxTimestamp, onFileSelected} = useGetFlows();
 
   const [selectedChart, setSelectedChart] = useState<number | string>(ChartID.GRAPH_REPRESENTATION);
 
   const flowsResume = new FlowsResume(flows);
   const windowSize = timeInterval / (maxTimestamp - minTimestamp) * 100;
-  const windowPadding = (actualTimestamp - minTimestamp) / (maxTimestamp - minTimestamp) * 100;
 
   const [isIpAndPortNodes, setIsIpAndPortNodes] = useState(false);
 
@@ -76,47 +74,10 @@ function App() {
   useEffect(() => {
     applyFilters();
   }, [flows, applyFilters]);
-  
-  const onFileSelected = useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
-    const file = ev.target.files![0];
-    const readText = async () => {
-      const jsonObject = []
-      const csvLines = (await file.text()).replace('\r', '').split('\n');
-      const headers = csvLines[0].split(',');
-      for(let i=0;i<headers.length;i++){
-        const aux = headers[i][0].toLowerCase() + headers[i].slice(1);
-        headers[i] = aux;
-      }
-      for(let i = 1; i < csvLines.length - 1; i++){
-        const fields = csvLines[i].split(',');
-        const jsonItem = {};
-        jsonItem['id'] = uuidv4()
-        for(let j = 0; j < fields.length; j++){
-          jsonItem[headers[j]] = fields[j]
-          if(headers[j] !== 'attackType'){
-            jsonItem[headers[j]] = parseInt(fields[j])
-          }
-        }
-        jsonObject.push(jsonItem);
-      }
-      
-      setFlows(jsonObject);
-      let minTs = jsonObject[0].initialTimestampMilliseconds;
-      let maxTs = jsonObject[0].finalTimestampMilliseconds;
-      jsonObject.forEach(flow => {
-        minTs = Math.min(minTs, flow.initialTimestampMilliseconds);
-        maxTs = Math.max(maxTs, flow.finalTimestampMilliseconds);
-      })
-      setActualTimestamp(minTs);
-      setMinTimestamp(minTs);
-      setMaxTimestamp(maxTs);
-    }
-    readText();
-  }, [])
 
-  const onSliderChange = useCallback((ev : React.ChangeEvent<HTMLInputElement>) => {
-    setActualTimestamp(parseInt(ev.target.value));
-  }, [])
+  useEffect(() => {
+    setActualTimestamp(minTimestamp);
+  }, [minTimestamp])
 
   const onIntervalChange = useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
     if(parseInt(ev.target.value)){
@@ -166,76 +127,47 @@ function App() {
 
   // Slidding window functions
   const intervalRef = useRef<HTMLDivElement>(null);
-  const [isWindowPressed, setIsWindowPressed] = useState<boolean>(false);
-  const [isLeftResizePressed, setIsLeftResizePressed] = useState<boolean>(false);
-  const [isRightResizePressed, setIsRightResizePressed] = useState<boolean>(false);
 
-  const [mouseReference, setMouseReference] = useState(0);
-
-  const onWindowMouseMove = (ev : React.MouseEvent<HTMLDivElement>) => {
-    if(isWindowPressed && intervalRef){
-      const windowWidth = intervalRef.current.offsetWidth;
-      const moved = ev.clientX - mouseReference;
-      setMouseReference(ev.clientX);
-      const percentMoved = moved / windowWidth;
-      const newTimestamp = Math.min(Math.max(actualTimestamp + Math.floor((maxTimestamp - minTimestamp) * percentMoved), minTimestamp), maxTimestamp);
+  const onWindowDrag = (_: DraggableEvent, ui: DraggableData) => {
+    if(intervalRef){
+      const intervalWidth = intervalRef.current!.offsetWidth;
+      const newPosition = Math.min(windowPosition + ui.deltaX, intervalWidth - windowSize);
+      const actualPercent = newPosition / intervalWidth;
+      const newTimestamp = minTimestamp + Math.floor((maxTimestamp - minTimestamp) * actualPercent);
       setActualTimestamp(newTimestamp);
+      setWindowPosition(newPosition);
+      setDeltaRightResize(newPosition);
     }
   }
 
-  const onWindowMouseDown = (ev : React.MouseEvent<HTMLDivElement>) => {
-    console.log('window')
-    setIsWindowPressed(true);
-    setMouseReference(ev.clientX);
-  }
-
-  const onWindowMouseUp = (ev : React.MouseEvent<HTMLDivElement>) => {
-    setIsWindowPressed(false);
-  }
-
-  const onLeftResizeMouseMove = (ev : React.MouseEvent<HTMLDivElement>) => {
-    if(isLeftResizePressed && intervalRef){
-      const windowWidth = intervalRef.current.offsetWidth;
-      const moved = ev.clientX - mouseReference;
-      setMouseReference(ev.clientX);
-      const percentMoved = moved / windowWidth;
-      const newTimestamp = Math.min(Math.max(actualTimestamp + Math.floor((maxTimestamp - minTimestamp) * percentMoved), minTimestamp), maxTimestamp);
+  const onLeftResizeDrag = (_: DraggableEvent, ui: DraggableData) => {
+    if(intervalRef){
+      const intervalWidth = intervalRef.current!.offsetWidth;
+      const newPosition = Math.min(windowPosition + ui.deltaX, windowPosition + windowSize);
+      const actualPercent = newPosition / intervalWidth;
+      const newTimestamp = minTimestamp + Math.floor((maxTimestamp - minTimestamp) * actualPercent);
       setTimeInterval(interval => interval - (newTimestamp - actualTimestamp));
       setActualTimestamp(newTimestamp);
+      setWindowPosition(newPosition);
+      setDeltaRightResize(newPosition);
     }
   }
 
-  const onLeftResizeMouseDown = (ev : React.MouseEvent<HTMLDivElement>) => {
-    ev.stopPropagation()
-    setIsLeftResizePressed(true);
-    setMouseReference(ev.clientX);
-  }
-
-  const onLeftResizeMouseUp = (ev : React.MouseEvent<HTMLDivElement>) => {
-    setIsLeftResizePressed(false);
-  }
-
-  const onRightResizeMouseMove = (ev : React.MouseEvent<HTMLDivElement>) => {
-    if(isRightResizePressed && intervalRef){
-      const windowWidth = intervalRef.current.offsetWidth;
-      const moved = ev.clientX - mouseReference;
-      setMouseReference(ev.clientX);
-      const percentMoved = moved / windowWidth;
-      setTimeInterval(interval => interval + Math.floor((maxTimestamp - minTimestamp) * percentMoved));
+  const onRightResizeDrag = (_: DraggableEvent, ui: DraggableData) => {
+    if(intervalRef){
+      const intervalWidth = intervalRef.current!.offsetWidth;
+      const actualPercent = ui.deltaX / intervalWidth;
+      const newTimeInterval = Math.max(1, timeInterval + Math.floor((maxTimestamp - minTimestamp) * actualPercent)); 
+      setTimeInterval(newTimeInterval);
+      setDeltaRightResize(windowPosition -ui.deltaX);
     }
   }
 
-  const onRightResizeMouseDown = (ev : React.MouseEvent<HTMLDivElement>) => {
-    ev.stopPropagation()
-    setIsRightResizePressed(true);
-    setMouseReference(ev.clientX);
+  const onRightResizeDragEnd = () => {
+    setDeltaRightResize(0);
+    setDeltaRightResize(windowPosition);
   }
 
-  const onRightResizeMouseUp = (ev : React.MouseEvent<HTMLDivElement>) => {
-    setIsRightResizePressed(false);
-  }
-  
-  
   return (
     <section className="h-screen w-screen gap-5 mr-5 bg-main-secondary">
       <div className="flex flex-col gap-5">
@@ -287,32 +219,43 @@ function App() {
                 <label htmlFor="check-id-port" className="ml-1">IP + port nodes</label>
               </div>
             </div>
-            <div ref={intervalRef} className="relative h-[80px] w-full my-5">
+            <div className="relative h-[80px] w-full my-5">
               <div className="absolute w-full h-full">
                 <RealtimeLineChart data={flowsResume.getFlowsData()} height={80} />
               </div>
-              <div 
-                className="absolute h-full opacity-90 bg-main-primary border border-slate-700 hover:cursor-grab flex flex-row justify-between"
-                onMouseDown={onWindowMouseDown}
-                onMouseMove={onWindowMouseMove}
-                onMouseUp={onWindowMouseUp}
-                style={{
-                  width: `${windowSize || 0}%`,
-                  marginLeft: `${windowPadding || 0}%`
-                }}
-              >
-                <div 
-                  onMouseDown={onLeftResizeMouseDown}
-                  onMouseUp={onLeftResizeMouseUp}
-                  onMouseMove={onLeftResizeMouseMove}
-                  className="h-full w-[15px] hover:cursor-ew-resize bg-slate-500"
-                ></div>
-                <div 
-                  className="h-full w-[15px] hover:cursor-ew-resize bg-slate-500"
-                  onMouseDown={onRightResizeMouseDown}
-                  onMouseUp={onRightResizeMouseUp}
-                  onMouseMove={onRightResizeMouseMove}
-                ></div>
+              <div ref={intervalRef} className="absolute h-full flex w-full">
+                <Draggable 
+                  position={{x: windowPosition, y: 0}} 
+                  axis="x" 
+                  bounds="parent" 
+                  onDrag={onLeftResizeDrag} 
+                  onStart={(ev) => ev.stopPropagation()}
+                >
+                  <div className="h-full w-[10px] hover:cursor-ew-resize bg-slate-500 mr-[-1px]"></div>
+                </Draggable>
+                <Draggable 
+                  position={{x: windowPosition, y: 0}} 
+                  bounds="parent" 
+                  axis="x" 
+                  onDrag={onWindowDrag}
+                >
+                  <div 
+                    className="h-full opacity-90 bg-main-primary border border-slate-700 hover:cursor-grab"
+                    style={{
+                      width: `${windowSize || 0}%`,
+                    }}
+                  >
+                  </div>
+                </Draggable>
+                <Draggable 
+                  axis="x" 
+                  bounds="parent" 
+                  position={{x: deltaRightResize, y: 0}}
+                  onDrag={onRightResizeDrag}
+                  onStop={onRightResizeDragEnd}
+                >
+                  <div className="h-full w-[10px] hover:cursor-ew-resize bg-slate-500 ml-[-1px]"></div>
+                </Draggable>
               </div>
             </div>
           </div>
